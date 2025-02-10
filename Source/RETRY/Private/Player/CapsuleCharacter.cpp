@@ -9,8 +9,10 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "MaterialHLSLTree.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/SpringArmComponent.h"
+#include "PhysicsEngine/PhysicsAsset.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ARETRYCharacter
@@ -47,6 +49,17 @@ void ACapsuleCharacter::BeginPlay()
 	// Call the base class  
 	Super::BeginPlay();
 	SetThirdPerson();
+
+	JumpForce = BaseJumpForce;
+	DashForce = BaseDashForce;
+}
+
+void ACapsuleCharacter::Tick(float DeltaSeconds)
+{
+	Super::Tick(DeltaSeconds);
+
+	GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Blue, FString::Printf(TEXT("JumpForce: %f"), JumpForce));
+	GEngine->AddOnScreenDebugMessage(2, 0.0f, FColor::Blue, FString::Printf(TEXT("DashForce: %f"), DashForce));
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -57,9 +70,20 @@ void ACapsuleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
 		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ACharacter::Jump);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseJump);
 		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Ongoing, this, &ACapsuleCharacter::ChargeJump);
+		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseJump);
+		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
+		// Dashing
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseDash);
+		EnhancedInputComponent->BindAction(ChargedDashAction, ETriggerEvent::Ongoing, this, &ACapsuleCharacter::ChargeDash);
+		EnhancedInputComponent->BindAction(ChargedDashAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseDash);
+
+		// Stomp
+		EnhancedInputComponent->BindAction(StompAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::Stomp);
+		
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::Move);
 
@@ -97,6 +121,35 @@ void ACapsuleCharacter::Look(const FInputActionValue& Value)
 		AddControllerYawInput(LookAxisVector.X);
 		AddControllerPitchInput(LookAxisVector.Y);
 	}
+}
+
+void ACapsuleCharacter::ChargeJump()
+{
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	JumpForce = FMath::Clamp(JumpForce+JumpChargePower*DeltaTime, BaseJumpForce, MaxJumpForce);
+}
+
+void ACapsuleCharacter::Stomp()
+{
+}
+
+void ACapsuleCharacter::ChargeDash()
+{
+	float DeltaTime = GetWorld()->GetDeltaSeconds();
+	DashForce = FMath::Clamp(DashForce+DashChargePower*DeltaTime, BaseDashForce, MaxDashForce);
+}
+
+void ACapsuleCharacter::ReleaseDash()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "ReleaseDash");
+	DashForce = BaseDashForce;
+}
+
+void ACapsuleCharacter::ReleaseJump()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "ReleaseJump");
+	ACapsuleCharacter::Jump();
+	JumpForce = BaseJumpForce;
 }
 
 void ACapsuleCharacter::SetFirstPerson()
