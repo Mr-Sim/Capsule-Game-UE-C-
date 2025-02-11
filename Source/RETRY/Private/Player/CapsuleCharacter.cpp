@@ -42,6 +42,9 @@ ACapsuleCharacter::ACapsuleCharacter()
 	Mesh3P->bCastDynamicShadow = true;
 	Mesh3P->CastShadow = true;
 
+	GetCharacterMovement()->bUseSeparateBrakingFriction = false;
+	GetCharacterMovement()->FallingLateralFriction = 0.f;
+
 
 }
 
@@ -131,23 +134,37 @@ void ACapsuleCharacter::ChargeJump()
 	JumpForce = FMath::Clamp(JumpForce+JumpChargePower*DeltaTime, BaseJumpForce, MaxJumpForce);
 }
 
+void ACapsuleCharacter::ReleaseJump()
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "ReleaseJump");
+	ACapsuleCharacter::Jump();
+	JumpForce = BaseJumpForce;
+
+	
+}
+
+
 void ACapsuleCharacter::Stomp()
 {
 }
 
 void ACapsuleCharacter::SimpleDash()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Simple Dash");
+
 	FVector2D InputDirection = MoveActionBinding->GetValue().Get<FVector2D>();
 	InputDirection.Normalize();
 
 	//InputDirection = (InputDirection==FVector2D::ZeroVector) ? FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y)  : InputDirection;
 	if (InputDirection == FVector2D::ZeroVector)
 	{
-		InputDirection = FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y);
+		auto Backward = Mesh3P->GetForwardVector().BackwardVector;
+		InputDirection = FVector2D(Backward.X,Backward.Y);
 	}
 	FVector Direction = FVector(InputDirection.X, InputDirection.Y, 0);
 	ExecuteDash(Direction);
 }
+
 void ACapsuleCharacter::ChargeDash()
 {
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
@@ -156,37 +173,25 @@ void ACapsuleCharacter::ChargeDash()
 
 void ACapsuleCharacter::ReleaseDash()
 {
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Charged Dash");
+
 	FVector2D InputDirection = MoveActionBinding->GetValue().Get<FVector2D>();
 	InputDirection.Normalize();
-
-	//InputDirection = (InputDirection==FVector2D::ZeroVector) ? FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y)  : InputDirection;
-	if (InputDirection == FVector2D::ZeroVector)
-	{
-		InputDirection = FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y);
-	}
-
-	FVector Direction = FVector(InputDirection.X, InputDirection.Y, 0);
+	
+	FVector Direction = CameraComponent->GetForwardVector();
 	ExecuteDash(Direction);
 }
 
 void ACapsuleCharacter::ExecuteDash(FVector Direction)
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Dash");
-
+{	
 	FVector DashVelocity = Direction * DashForce;
+	LaunchCharacter(DashVelocity, false, false);
 
-	GetCharacterMovement()->Velocity += DashVelocity;
+	//GetCharacterMovement()->Velocity += DashVelocity;
 	
 	DashForce = BaseDashForce;
 }
 
-
-void ACapsuleCharacter::ReleaseJump()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "ReleaseJump");
-	ACapsuleCharacter::Jump();
-	JumpForce = BaseJumpForce;
-}
 
 void ACapsuleCharacter::SetFirstPerson()
 {

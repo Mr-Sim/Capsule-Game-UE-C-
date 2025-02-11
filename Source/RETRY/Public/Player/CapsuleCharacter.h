@@ -80,8 +80,10 @@ protected:
     UInputAction* ChargedDashAction;
 
 private:
-    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
     bool bIsFirstPerson;
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = State, meta = (AllowPrivateAccess = "true"))
+    bool bIsDashing;
 
     struct FEnhancedInputActionValueBinding* MoveActionBinding;
     
