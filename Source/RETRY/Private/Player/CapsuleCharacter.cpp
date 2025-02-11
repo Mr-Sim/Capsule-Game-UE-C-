@@ -11,6 +11,7 @@
 #include "InputActionValue.h"
 #include "MaterialHLSLTree.h"
 #include "Engine/LocalPlayer.h"
+#include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "PhysicsEngine/PhysicsAsset.h"
 
@@ -77,7 +78,7 @@ void ACapsuleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
 
 		// Dashing
-		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseDash);
+		EnhancedInputComponent->BindAction(DashAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::SimpleDash);
 		EnhancedInputComponent->BindAction(ChargedDashAction, ETriggerEvent::Ongoing, this, &ACapsuleCharacter::ChargeDash);
 		EnhancedInputComponent->BindAction(ChargedDashAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseDash);
 
@@ -86,6 +87,7 @@ void ACapsuleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		
 		// Moving
 		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::Move);
+		MoveActionBinding = &EnhancedInputComponent->BindActionValue(MoveAction);
 
 		// Looking
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::Look);
@@ -133,6 +135,19 @@ void ACapsuleCharacter::Stomp()
 {
 }
 
+void ACapsuleCharacter::SimpleDash()
+{
+	FVector2D InputDirection = MoveActionBinding->GetValue().Get<FVector2D>();
+	InputDirection.Normalize();
+
+	//InputDirection = (InputDirection==FVector2D::ZeroVector) ? FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y)  : InputDirection;
+	if (InputDirection == FVector2D::ZeroVector)
+	{
+		InputDirection = FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y);
+	}
+	FVector Direction = FVector(InputDirection.X, InputDirection.Y, 0);
+	ExecuteDash(Direction);
+}
 void ACapsuleCharacter::ChargeDash()
 {
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
@@ -141,9 +156,30 @@ void ACapsuleCharacter::ChargeDash()
 
 void ACapsuleCharacter::ReleaseDash()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "ReleaseDash");
+	FVector2D InputDirection = MoveActionBinding->GetValue().Get<FVector2D>();
+	InputDirection.Normalize();
+
+	//InputDirection = (InputDirection==FVector2D::ZeroVector) ? FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y)  : InputDirection;
+	if (InputDirection == FVector2D::ZeroVector)
+	{
+		InputDirection = FVector2D(GetActorForwardVector().BackwardVector.X,GetActorForwardVector().BackwardVector.Y);
+	}
+
+	FVector Direction = FVector(InputDirection.X, InputDirection.Y, 0);
+	ExecuteDash(Direction);
+}
+
+void ACapsuleCharacter::ExecuteDash(FVector Direction)
+{
+	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "Dash");
+
+	FVector DashVelocity = Direction * DashForce;
+
+	GetCharacterMovement()->Velocity += DashVelocity;
+	
 	DashForce = BaseDashForce;
 }
+
 
 void ACapsuleCharacter::ReleaseJump()
 {

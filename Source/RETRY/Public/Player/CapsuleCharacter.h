@@ -29,11 +29,14 @@ protected:
 
     // INPUT RESPONSES
     void Move(const FInputActionValue& Value);
+    FVector2D GetCurrentMoveVector() const;
     void Look(const FInputActionValue& Value);
     void ChargeJump();
     void ReleaseJump();
     void Stomp();
     void ChargeDash();
+    void SimpleDash();
+    void ExecuteDash(FVector Direction);
     void ReleaseDash();
 
 public:
@@ -77,10 +80,12 @@ protected:
     UInputAction* ChargedDashAction;
 
 private:
-    /** Movement variables */
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Camera, meta = (AllowPrivateAccess = "true"))
     bool bIsFirstPerson;
 
+    struct FEnhancedInputActionValueBinding* MoveActionBinding;
+    
+    // JUMP VARIABLES
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
     float JumpChargePower;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
@@ -88,7 +93,8 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
     float BaseJumpForce;
     float JumpForce;
-    
+
+    // DASH VARIABLES
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
     float DashChargePower;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
