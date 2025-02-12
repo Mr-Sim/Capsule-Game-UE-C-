@@ -4,6 +4,7 @@
 #include "GameFramework/Character.h"
 #include "CapsuleCharacter.generated.h"
 
+class UDashComponent;
 class USpringArmComponent;
 class UInputComponent;
 class USkeletalMeshComponent;
@@ -34,10 +35,6 @@ protected:
     void ChargeJump();
     void ReleaseJump();
     void Stomp();
-    void ChargeDash();
-    void SimpleDash();
-    void ExecuteDash(FVector Direction);
-    void ReleaseDash();
 
 public:
     // Camera management
@@ -63,6 +60,10 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* SpringArm;
 
+
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components, meta = (AllowPrivateAccess = "true"))
+    UDashComponent* DashComponent;
+
     /** Input actions */
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* JumpAction;
@@ -71,19 +72,13 @@ protected:
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* LookAction;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-    UInputAction* DashAction;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* StompAction;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* ChargedJumpAction;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-    UInputAction* ChargedDashAction;
 
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
     bool bIsFirstPerson;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = State, meta = (AllowPrivateAccess = "true"))
-    bool bIsDashing;
 
     struct FEnhancedInputActionValueBinding* MoveActionBinding;
     
@@ -95,13 +90,5 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
     float BaseJumpForce;
     float JumpForce;
-
-    // DASH VARIABLES
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
-    float DashChargePower;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
-    float MaxDashForce;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
-    float BaseDashForce;
-    float DashForce;
+    
 };
