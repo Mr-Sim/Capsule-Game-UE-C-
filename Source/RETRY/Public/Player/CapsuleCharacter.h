@@ -1,9 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Components/TimelineComponent.h"
 #include "GameFramework/Character.h"
 #include "CapsuleCharacter.generated.h"
 
+struct FTimeline;
 class UDashComponent;
 class USpringArmComponent;
 class UInputComponent;
@@ -24,6 +26,7 @@ public:
 protected:
     
     virtual void BeginPlay() override;
+    virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     virtual void Tick(float DeltaSeconds) override;
     virtual void SetupPlayerInputComponent(UInputComponent* InputComponent) override;
     
@@ -40,7 +43,8 @@ public:
     // Camera management
     void SetFirstPerson();
     void SetThirdPerson();
-
+    void VelocityAnimation(float Force);
+    
     /** Returns Mesh1P subobject **/
     USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
     /** Returns FirstPersonCameraComponent subobject **/
@@ -90,5 +94,30 @@ private:
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
     float BaseJumpForce;
     float JumpForce;
-    
+
+    // ANIMATION VARIABLES
+    UPROPERTY(EditAnywhere)
+    FTimeline FovTimeline;
+    UPROPERTY(EditAnywhere)
+    FTimeline SpringArmTimeline;
+    UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    UCurveFloat* FovCurve;
+    UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    UCurveFloat* SpringArmCurve;
+    UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    float InitialFOV;
+    UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    float TargetFov;
+    UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    float InitialSpringArmTarget;
+    UPROPERTY(EditAnywhere, Category = "Camera", meta = (AllowPrivateAccess = "true"))
+    float TargetSpringArmTarget;
+
+    UFUNCTION()
+    void UpdateFov(float Value);
+    UFUNCTION()
+    void UpdateSpringArm(float Value);
+    UFUNCTION()
+    void ResetCamera();
+    void CancelAllTimers();
 };

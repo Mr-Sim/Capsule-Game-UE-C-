@@ -109,10 +109,19 @@ void UDashComponent::ExecuteDash(FVector Direction)
 	
 	OwnerCharacter->LaunchCharacter(DashVelocity, true, false);
 	SetDashState();
-	
+	PlayDashAnimation(fDashForce);
 	fDashForce = BaseDashForce;
 	bIsDashing = true;
 	fDashCooldownTimer = DashCooldown;
+}
+
+void UDashComponent::PlayDashAnimation(float Force)
+{
+	if (MM_DashAnim)
+	{
+		OwnerCharacter->GetMesh3P()->PlayAnimation(MM_DashAnim, false);
+		OwnerCharacter->VelocityAnimation(Force);
+	}
 }
 
 void UDashComponent::SetDashState()

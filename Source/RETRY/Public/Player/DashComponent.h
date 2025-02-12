@@ -41,6 +41,7 @@ private:
 	// FUNCTIONS
 	void SetDashState();
 	void SetNormalState();
+	void PlayDashAnimation(float Force);
 
 	
 	// INPUTS
@@ -48,6 +49,9 @@ private:
 	UInputAction* DashAction;
 	UPROPERTY(EditAnywhere, Category = "Input")
 	UInputAction* ChargedDashAction;
+
+	UPROPERTY(EditAnywhere, Category = "Dash", meta = (EditCondition = "DashState == true"))
+	UAnimationAsset* MM_DashAnim;
 
 	// SETTINGS
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash", meta = (AllowPrivateAccess = "true"))

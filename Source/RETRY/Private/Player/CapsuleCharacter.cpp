@@ -9,6 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "Components/TimelineComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
@@ -22,6 +23,10 @@ ACapsuleCharacter::ACapsuleCharacter()
 	// Set size for collision capsule
 	GetCapsuleComponent()->InitCapsuleSize(55.f, 96.0f);
 
+	InitialFOV = 90.f;
+	InitialSpringArmTarget = 0.f;
+	FovTimeline = FTimeline();
+	SpringArmTimeline = FTimeline();
 	
 	// Create a CameraComponent	
 	CameraComponent = CreateDefaultSubobject<UCameraComponent>(TEXT("Camera"));
@@ -57,17 +62,59 @@ void ACapsuleCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	SetThirdPerson();
-
+	
 	JumpForce = BaseJumpForce;
 
+	if (CameraComponent)
+	{
+		InitialFOV = CameraComponent->FieldOfView;
+	}
+
+	if (!FovCurve || !SpringArmCurve)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Courbes d'animation manquantes pour les timelines"));
+		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "AAAAAAAAAAA");
+
+	}
+	
+	FOnTimelineFloat TimelineCallback;
+	if (FovCurve)
+	{
+		TimelineCallback.BindUFunction(this, FName("UpdateFov"));
+		FovTimeline.AddInterpFloat(FovCurve, TimelineCallback);
+		FovTimeline.SetLooping(false);
+	}
+	if (SpringArmCurve)
+	{
+		GEngine->AddOnScreenDebugMessage(8, 5.f, FColor::Green, "SpringArmOk");
+
+		TimelineCallback.BindUFunction(this, FName("UpdateSpringArm"));
+		SpringArmTimeline.AddInterpFloat(SpringArmCurve, TimelineCallback);
+		SpringArmTimeline.SetLooping(false);
+	}
+}
+
+void ACapsuleCharacter::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	GEngine->AddOnScreenDebugMessage(7, 5.f, FColor::Green, "Endplay");
+
+	Super::EndPlay(EndPlayReason);
+	if (FovTimeline.IsPlaying())
+		FovTimeline.Stop();
+	if (SpringArmTimeline.IsPlaying())
+		SpringArmTimeline.Stop();
 }
 
 void ACapsuleCharacter::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
+	// Mise à jour des timelines
+	FovTimeline.TickTimeline(DeltaSeconds);
+	SpringArmTimeline.TickTimeline(DeltaSeconds);
+	
 	GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Blue, FString::Printf(TEXT("JumpForce: %f"), JumpForce));
+	GEngine->AddOnScreenDebugMessage(10, 0.0f, FColor::Blue, FString::Printf(TEXT("SpringArm Length: %f"), SpringArm->TargetArmLength));
 }
 
 //////////////////////////////////////////////////////////////////////////// Input
@@ -170,4 +217,66 @@ void ACapsuleCharacter::SetThirdPerson()
 	bIsFirstPerson = false;
 	SpringArm->TargetArmLength = 500.f;
 	Mesh3P->SetOwnerNoSee(false);
+}
+
+void ACapsuleCharacter::VelocityAnimation(float Force)
+{
+	CancelAllTimers();
+	if (!CameraComponent || !SpringArm) return GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Camera component or springarm absent for VelocityAnimation");	
+
+	TargetSpringArmTarget = Force;
+
+	 // Phase 1 augmentation FOV
+	 FovTimeline.SetPlayRate(1.f/0.2f);
+	 FovTimeline.PlayFromStart();
+	
+	 // Phase 2 : réduction FOV + allongement springArm
+	 FTimerHandle TimerHandle;
+	 GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+	 {
+	 	SpringArmTimeline.SetPlayRate(1.f/0.8f);
+	 	SpringArmTimeline.PlayFromStart();
+	 }, 0.2f, false);
+	
+	 // Phase 3 : Réduction du SpringArm + augmentation du FOV
+	 GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+	 {
+	 	SpringArmTimeline.Reverse();
+	 	FovTimeline.PlayFromStart();
+	 }, 1.0f, false	);
+	
+	 // Phase 4 : Réduction finale du FOV sur 0.2s
+	 GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+	 {
+	 	FovTimeline.Reverse();
+	 }, 1.5f, false);
+
+}
+
+void ACapsuleCharacter::UpdateFov(float Value)
+{
+	GEngine->AddOnScreenDebugMessage(6, 5.f, FColor::Green, "Update FOV");
+
+	if (CameraComponent)
+	{
+		CameraComponent->SetFieldOfView(FMath::Lerp(InitialFOV, TargetFov, Value));
+	}
+}
+
+void ACapsuleCharacter::UpdateSpringArm(float Value)
+{
+	GEngine->AddOnScreenDebugMessage(5, 5.f, FColor::Green, "Update Spring Arm");
+	if (SpringArm)
+	{
+		SpringArm->TargetArmLength = FMath::Lerp(InitialSpringArmTarget, TargetSpringArmTarget, Value);
+	}
+}
+
+void ACapsuleCharacter::ResetCamera()
+{
+}
+
+void ACapsuleCharacter::CancelAllTimers()
+{
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
