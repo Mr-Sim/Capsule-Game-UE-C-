@@ -77,19 +77,22 @@ void ACapsuleCharacter::BeginPlay()
 
 	}
 	
-	FOnTimelineFloat TimelineCallback;
 	if (FovCurve)
 	{
-		TimelineCallback.BindUFunction(this, FName("UpdateFov"));
-		FovTimeline.AddInterpFloat(FovCurve, TimelineCallback);
+		FOnTimelineFloat FovTimelineCallback;
+		FovTimelineCallback.BindUFunction(this, FName("UpdateFov"));
+		FovTimeline.AddInterpFloat(FovCurve, FovTimelineCallback);
 		FovTimeline.SetLooping(false);
 	}
+
 	if (SpringArmCurve)
 	{
-		GEngine->AddOnScreenDebugMessage(8, 5.f, FColor::Green, "SpringArmOk");
+		UE_LOG(LogTemp, Warning, TEXT("SpringArmCurve keys count: %d"), SpringArmCurve->FloatCurve.GetNumKeys());
 
-		TimelineCallback.BindUFunction(this, FName("UpdateSpringArm"));
-		SpringArmTimeline.AddInterpFloat(SpringArmCurve, TimelineCallback);
+		GEngine->AddOnScreenDebugMessage(8, 5.f, FColor::Green, "SpringArmOk");
+		FOnTimelineFloat SpringArmTimelineCallback;
+		SpringArmTimelineCallback.BindUFunction(this, FName("UpdateSpringArm"));
+		SpringArmTimeline.AddInterpFloat(SpringArmCurve, SpringArmTimelineCallback);
 		SpringArmTimeline.SetLooping(false);
 	}
 }
@@ -230,26 +233,32 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 	 FovTimeline.SetPlayRate(1.f/0.2f);
 	 FovTimeline.PlayFromStart();
 	
-	 // Phase 2 : réduction FOV + allongement springArm
-	 FTimerHandle TimerHandle;
-	 GetWorldTimerManager().SetTimer(TimerHandle, [&]()
-	 {
-	 	SpringArmTimeline.SetPlayRate(1.f/0.8f);
-	 	SpringArmTimeline.PlayFromStart();
-	 }, 0.2f, false);
-	
-	 // Phase 3 : Réduction du SpringArm + augmentation du FOV
-	 GetWorldTimerManager().SetTimer(TimerHandle, [&]()
-	 {
-	 	SpringArmTimeline.Reverse();
-	 	FovTimeline.PlayFromStart();
-	 }, 1.0f, false	);
-	
-	 // Phase 4 : Réduction finale du FOV sur 0.2s
-	 GetWorldTimerManager().SetTimer(TimerHandle, [&]()
-	 {
-	 	FovTimeline.Reverse();
-	 }, 1.5f, false);
+	// Phase 2
+	FTimerHandle TimerHandle1;
+	GetWorldTimerManager().SetTimer(TimerHandle1, [&]()
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SpringArmTimeline.PlayFromStart() called"));
+		SpringArmTimeline.SetPlayRate(1.f / 0.8f);
+		FovTimeline.SetPlayRate(1.f/0.8f);
+		SpringArmTimeline.PlayFromStart();
+	}, 0.2f, false);
+
+	// Phase 3
+	FTimerHandle TimerHandle2;
+	GetWorldTimerManager().SetTimer(TimerHandle2, [&]()
+	{
+		UE_LOG(LogTemp, Warning, TEXT("SpringArmTimeline.Reverse() called"));
+		SpringArmTimeline.Reverse();
+		FovTimeline.PlayFromStart();
+	}, 1.0f, false);
+
+	// Phase 4
+	FTimerHandle TimerHandle3;
+	GetWorldTimerManager().SetTimer(TimerHandle3, [&]()
+	{
+		UE_LOG(LogTemp, Warning, TEXT("FovTimeline.Reverse() called"));
+		FovTimeline.Reverse();
+	}, 1.5f, false);
 
 }
 
