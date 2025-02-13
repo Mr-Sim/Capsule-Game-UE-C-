@@ -120,7 +120,7 @@ void UDashComponent::PlayDashAnimation(float Force)
 	if (MM_DashAnim)
 	{
 		OwnerCharacter->GetMesh3P()->PlayAnimation(MM_DashAnim, false);
-		OwnerCharacter->VelocityAnimation(Force*0.5);
+		OwnerCharacter->VelocityAnimation(Force*0.4);
 	}
 }
 

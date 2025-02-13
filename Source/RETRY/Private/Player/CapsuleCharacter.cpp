@@ -224,42 +224,37 @@ void ACapsuleCharacter::SetThirdPerson()
 
 void ACapsuleCharacter::VelocityAnimation(float Force)
 {
-	CancelAllTimers();
-	if (!CameraComponent || !SpringArm) return GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Camera component or springarm absent for VelocityAnimation");	
+	if (!CameraComponent || !SpringArm) 
+	{
+		return GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "Camera component or springarm absent for VelocityAnimation");
+	}
+
+	if (FovTimeline.IsPlaying() || SpringArmTimeline.IsPlaying())
+	{
+		FovTimeline.Stop();
+		SpringArmTimeline.Stop();
+	}
+
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 
 	TargetSpringArmTarget = Force;
 
-	 // Phase 1 augmentation FOV
-	 FovTimeline.SetPlayRate(1.f/0.2f);
-	 FovTimeline.PlayFromStart();
-	
-	// Phase 2
-	FTimerHandle TimerHandle1;
-	GetWorldTimerManager().SetTimer(TimerHandle1, [&]()
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SpringArmTimeline.PlayFromStart() called"));
-		SpringArmTimeline.SetPlayRate(1.f / 0.8f);
-		FovTimeline.SetPlayRate(1.f/0.8f);
-		SpringArmTimeline.PlayFromStart();
-	}, 0.2f, false);
+	// Config Timeline 
+	FovTimeline.SetPlayRate(1.f / 0.8f);
+	SpringArmTimeline.SetPlayRate(1.f / 0.8f);
 
-	// Phase 3
-	FTimerHandle TimerHandle2;
-	GetWorldTimerManager().SetTimer(TimerHandle2, [&]()
-	{
-		UE_LOG(LogTemp, Warning, TEXT("SpringArmTimeline.Reverse() called"));
-		SpringArmTimeline.Reverse();
-		FovTimeline.PlayFromStart();
-	}, 1.0f, false);
+	// Begin anim
+	FovTimeline.PlayFromStart();
+	SpringArmTimeline.PlayFromStart();
 
-	// Phase 4
-	FTimerHandle TimerHandle3;
-	GetWorldTimerManager().SetTimer(TimerHandle3, [&]()
+	// Inverse
+	FTimerHandle TimerHandle;
+	GetWorldTimerManager().SetTimer(TimerHandle, [&]()
 	{
-		UE_LOG(LogTemp, Warning, TEXT("FovTimeline.Reverse() called"));
+		UE_LOG(LogTemp, Warning, TEXT("Retour à la normale"));
 		FovTimeline.Reverse();
-	}, 1.5f, false);
-
+		SpringArmTimeline.Reverse();
+	}, 0.8f, false);
 }
 
 void ACapsuleCharacter::UpdateFov(float Value)

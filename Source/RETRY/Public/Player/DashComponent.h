@@ -68,7 +68,7 @@ private:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash", meta = (AllowPrivateAccess = "true"))
 	float DashDuration = 1.0;
 
-	// VARIABLES
+	// VARIABLES	
 	float fDashForce = BaseDashForce;
 	FVector2D InputDirection;
 
