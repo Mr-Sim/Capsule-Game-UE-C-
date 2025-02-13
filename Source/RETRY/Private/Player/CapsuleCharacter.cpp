@@ -252,8 +252,8 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 	GetWorldTimerManager().SetTimer(TimerHandle, [&]()
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Retour à la normale"));
-		FovTimeline.Reverse();
-		SpringArmTimeline.Reverse();
+		//FovTimeline.Reverse();
+		//SpringArmTimeline.Reverse();
 	}, 0.8f, false);
 }
 
