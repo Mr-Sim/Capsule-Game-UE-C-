@@ -14,6 +14,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/DashComponent.h"
+#include "Player/JumpComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ARETRYCharacter
@@ -48,7 +49,7 @@ ACapsuleCharacter::ACapsuleCharacter()
 
 	// Create Dash Component
 	DashComponent = CreateDefaultSubobject<UDashComponent>(TEXT("DashComponent"));
-	
+	JumpComponent = CreateDefaultSubobject<UJumpComponent>(TEXT("JumpComponent"));
 
 	// Setup Character Physics
 	GetCharacterMovement()->bUseSeparateBrakingFriction = false;
@@ -62,9 +63,6 @@ void ACapsuleCharacter::BeginPlay()
 {
 	// Call the base class  
 	Super::BeginPlay();
-	
-	JumpForce = BaseJumpForce;
-
 	if (CameraComponent)
 	{
 		InitialFOV = CameraComponent->FieldOfView;
@@ -116,7 +114,6 @@ void ACapsuleCharacter::Tick(float DeltaSeconds)
 	FovTimeline.TickTimeline(DeltaSeconds);
 	SpringArmTimeline.TickTimeline(DeltaSeconds);
 	
-	GEngine->AddOnScreenDebugMessage(1, 0.0f, FColor::Blue, FString::Printf(TEXT("JumpForce: %f"), JumpForce));
 	GEngine->AddOnScreenDebugMessage(10, 0.0f, FColor::Blue, FString::Printf(TEXT("SpringArm Length: %f"), SpringArm->TargetArmLength));
 }
 
@@ -127,12 +124,7 @@ void ACapsuleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 	// Set up action bindings
 	if (UEnhancedInputComponent* EnhancedInputComponent = Cast<UEnhancedInputComponent>(PlayerInputComponent))
 	{
-		// Jumping
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseJump);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
-		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Ongoing, this, &ACapsuleCharacter::ChargeJump);
-		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::ReleaseJump);
-		EnhancedInputComponent->BindAction(ChargedJumpAction, ETriggerEvent::Completed, this, &ACharacter::StopJumping);
+
 
 		// Stomp
 		EnhancedInputComponent->BindAction(StompAction, ETriggerEvent::Triggered, this, &ACapsuleCharacter::Stomp);
@@ -147,6 +139,11 @@ void ACapsuleCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCo
 		if (DashComponent)
 		{
 			DashComponent->SetupDashInput(EnhancedInputComponent);
+		}
+
+		if (JumpComponent)
+		{
+			JumpComponent->SetupJumpInput(EnhancedInputComponent);
 		}
 	}
 	else
@@ -187,22 +184,6 @@ void ACapsuleCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ACapsuleCharacter::ChargeJump()
-{
-	float DeltaTime = GetWorld()->GetDeltaSeconds();
-	JumpForce = FMath::Clamp(JumpForce+JumpChargePower*DeltaTime, BaseJumpForce, MaxJumpForce);
-}
-
-void ACapsuleCharacter::ReleaseJump()
-{
-	GEngine->AddOnScreenDebugMessage(-1, 5, FColor::Red, "ReleaseJump");
-	ACapsuleCharacter::Jump();
-	JumpForce = BaseJumpForce;
-
-	
-}
-
-
 void ACapsuleCharacter::Stomp()
 {
 }
@@ -211,7 +192,7 @@ void ACapsuleCharacter::Stomp()
 void ACapsuleCharacter::SetFirstPerson()
 {
 	bIsFirstPerson = true;
-	SpringArm->TargetArmLength = 0.f;
+	SpringArm->TargetArmLength = 500.f;
 	Mesh3P->SetOwnerNoSee(true);
 }
 
@@ -240,8 +221,8 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 	TargetSpringArmTarget = Force;
 
 	// Config Timeline 
-	FovTimeline.SetPlayRate(1.f / 0.8f);
-	SpringArmTimeline.SetPlayRate(1.f / 0.8f);
+	FovTimeline.SetPlayRate(1.f / 1.f);
+	SpringArmTimeline.SetPlayRate(1.f / 1.f);
 
 	// Begin anim
 	FovTimeline.PlayFromStart();

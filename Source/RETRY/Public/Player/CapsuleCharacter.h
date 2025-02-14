@@ -5,6 +5,7 @@
 #include "GameFramework/Character.h"
 #include "CapsuleCharacter.generated.h"
 
+class UJumpComponent;
 struct FTimeline;
 class UDashComponent;
 class USpringArmComponent;
@@ -35,8 +36,6 @@ protected:
     void Move(const FInputActionValue& Value);
     FVector2D GetCurrentMoveVector() const;
     void Look(const FInputActionValue& Value);
-    void ChargeJump();
-    void ReleaseJump();
     void Stomp();
 
 public:
@@ -64,21 +63,18 @@ protected:
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* SpringArm;
 
-
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
+    UJumpComponent* JumpComponent;
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components, meta = (AllowPrivateAccess = "true"))
     UDashComponent* DashComponent;
-
-    /** Input actions */
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-    UInputAction* JumpAction;
+    
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* MoveAction;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* LookAction;
     UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
     UInputAction* StompAction;
-    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-    UInputAction* ChargedJumpAction;
+    
 
 private:
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = State, meta = (AllowPrivateAccess = "true"))
@@ -86,14 +82,6 @@ private:
 
     struct FEnhancedInputActionValueBinding* MoveActionBinding;
     
-    // JUMP VARIABLES
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
-    float JumpChargePower;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
-    float MaxJumpForce;
-    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Movement, meta = (AllowPrivateAccess = "true"))
-    float BaseJumpForce;
-    float JumpForce;
 
     // ANIMATION VARIABLES
     UPROPERTY(EditAnywhere)
