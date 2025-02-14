@@ -71,7 +71,6 @@ void ACapsuleCharacter::BeginPlay()
 	if (!FovCurve || !SpringArmCurve)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Courbes d'animation manquantes pour les timelines"));
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "AAAAAAAAAAA");
 
 	}
 	

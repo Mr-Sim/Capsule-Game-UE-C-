@@ -42,7 +42,7 @@ private:
 
 	// Intervalle de spawn des missiles
 	UPROPERTY(EditDefaultsOnly, Category = "Missile")
-	float MissileSpawnRate = 1.0f;
+	float MissileSpawnRate = 2.0f;
 
 	// Timer pour le spawn des missiles
 	FTimerHandle MissileSpawnTimer;

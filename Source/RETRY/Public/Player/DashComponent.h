@@ -85,4 +85,8 @@ private:
 	ACapsuleCharacter* OwnerCharacter;
 	UPROPERTY()
 	UCameraComponent* OwnerCamera;
+
+	UPROPERTY()
+	UUserWidget* ChargeSliderWidget;
+	
 };

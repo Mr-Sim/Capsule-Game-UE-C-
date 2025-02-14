@@ -1,4 +1,6 @@
 #include "Player/JumpComponent.h"
+
+#include "CapsulePlayerController.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Player/CapsuleCharacter.h"
 
@@ -46,6 +48,8 @@ void UJumpComponent::ChargeJump()
 
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 	CurrentJumpForce = FMath::Clamp(CurrentJumpForce + JumpChargeRate * DeltaTime, BaseJumpForce, MaxJumpForce);
+	Cast<ACapsulePlayerController>(GetWorld()->GetFirstPlayerController())->SetGaugeCharge(CurrentJumpForce);
+
 }
 
 void UJumpComponent::ReleaseJump()
@@ -78,6 +82,8 @@ void UJumpComponent::ExecuteJump()
 
 	CurrentJumpForce = BaseJumpForce;
 	bIsJumping = true;
+	Cast<ACapsulePlayerController>(GetWorld()->GetFirstPlayerController())->SetGaugeCharge(CurrentJumpForce);
+
 }
 
 void UJumpComponent::PlayJumpAnimation(float Force)

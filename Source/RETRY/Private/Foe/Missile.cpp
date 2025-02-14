@@ -13,7 +13,7 @@ AMissile::AMissile()
 
 	// Création de la collision
 	CollisionComponent = CreateDefaultSubobject<USphereComponent>(TEXT("CollisionComponent"));
-	CollisionComponent->InitSphereRadius(30.0f);
+	CollisionComponent->InitSphereRadius(100.0f);
 	CollisionComponent->SetCollisionProfileName(TEXT("BlockAll"));
 	RootComponent = CollisionComponent;
 

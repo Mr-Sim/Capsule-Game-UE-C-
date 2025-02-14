@@ -3,6 +3,7 @@
 
 #include "Player/DashComponent.h"
 
+#include "CapsulePlayerController.h"
 #include "EnhancedInputComponent.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
@@ -72,6 +73,8 @@ void UDashComponent::ChargeDash()
 	if (!bCanDash) return;
 	float DeltaTime = GetWorld()->GetDeltaSeconds();
 	fDashForce = FMath::Clamp(fDashForce+DashChargePower*DeltaTime, BaseDashForce, MaxDashForce);
+
+	Cast<ACapsulePlayerController>(GetWorld()->GetFirstPlayerController())->SetGaugeCharge(fDashForce);
 }
 
 void UDashComponent::ReleaseDash()
@@ -82,6 +85,8 @@ void UDashComponent::ReleaseDash()
 
 	FVector Direction = OwnerCamera->GetForwardVector();
 	ExecuteDash(Direction);
+	PlayDashAnimation(fDashForce);
+
 }
 
 void UDashComponent::SimpleDash()
@@ -99,6 +104,7 @@ void UDashComponent::SimpleDash()
 	if (Direction.IsZero()) Direction = -Forward;
 
 	ExecuteDash(Direction);
+
 }
 
 void UDashComponent::ExecuteDash(FVector Direction)
@@ -109,10 +115,11 @@ void UDashComponent::ExecuteDash(FVector Direction)
 	
 	OwnerCharacter->LaunchCharacter(DashVelocity, true, false);
 	SetDashState();
-	PlayDashAnimation(fDashForce);
 	fDashForce = BaseDashForce;
 	bIsDashing = true;
 	fDashCooldownTimer = DashCooldown;
+	Cast<ACapsulePlayerController>(GetWorld()->GetFirstPlayerController())->SetGaugeCharge(fDashForce);
+
 }
 
 void UDashComponent::PlayDashAnimation(float Force)

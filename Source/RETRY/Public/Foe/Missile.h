@@ -38,10 +38,10 @@ private:
 	UNiagaraSystem* ExplosionEffect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	float Speed = 900.0f;
+	float Speed = 850.0f;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Movement")
-	float RotationSpeed = 0.5f;
+	float RotationSpeed = 0.4f;
 
 	ACharacter* TargetPlayer;
 

@@ -8,6 +8,7 @@
 
 
 class UInputMappingContext;
+class UUserWidget;
 
 /**
  * 
@@ -28,5 +29,22 @@ protected:
 
 	virtual void BeginPlay() override;
 
+
+	UPROPERTY(EditAnywhere, Category = "UI")
+	TSubclassOf<UUserWidget> ChargeSliderWidgetClass;
+
+	UPROPERTY()
+	UUserWidget* ChargeSliderWidget;
+
+	UPROPERTY()
+	float GaugeCharge;
+	
+
 	// End Actor interface
+
+public:
+	UFUNCTION(BlueprintCallable)
+	inline float GetGauge() { return GaugeCharge; }
+	UFUNCTION(BlueprintCallable)
+	inline void SetGaugeCharge(float value) { GaugeCharge = value; }
 };
