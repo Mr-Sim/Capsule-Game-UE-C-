@@ -6,6 +6,8 @@
 #include "CapsuleCharacter.generated.h"
 
 struct FTimeline;
+struct FInputActionValue;
+class UNiagaraComponent;
 class UDashComponent;
 class USpringArmComponent;
 class UInputComponent;
@@ -13,7 +15,6 @@ class USkeletalMeshComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
-struct FInputActionValue;
 
 UCLASS(config=Game)
 class ACapsuleCharacter : public ACharacter
@@ -44,7 +45,9 @@ public:
     void SetFirstPerson();
     void SetThirdPerson();
     void VelocityAnimation(float Force);
-    
+    UFUNCTION()
+    void EndVelocityAnimation();
+
     /** Returns Mesh1P subobject **/
     USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
     /** Returns FirstPersonCameraComponent subobject **/
@@ -63,6 +66,8 @@ protected:
     UCameraComponent* CameraComponent;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* SpringArm;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    UNiagaraComponent* VelocityVFX;
 
 
     UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = Components, meta = (AllowPrivateAccess = "true"))

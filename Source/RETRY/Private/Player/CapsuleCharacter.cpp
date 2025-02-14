@@ -2,6 +2,7 @@
 
 
 #include "Player/CapsuleCharacter.h"
+#include "Player/CapsuleCharacter.h"
 #include "Animation/AnimInstance.h"
 #include "Camera/CameraComponent.h"
 #include "Components/CapsuleComponent.h"
@@ -14,6 +15,7 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Player/DashComponent.h"
+#include "NiagaraComponent.h"
 
 //////////////////////////////////////////////////////////////////////////
 // ARETRYCharacter
@@ -39,6 +41,11 @@ ACapsuleCharacter::ACapsuleCharacter()
 	SpringArm->CameraLagSpeed = 0.f;
 	SpringArm->bAutoActivate = true;
 	CameraComponent->SetupAttachment(SpringArm);
+
+	// Setup niagara system
+	VelocityVFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("VelocityVFX"));
+	VelocityVFX->SetupAttachment(CameraComponent);
+	VelocityVFX->SetAutoActivate(true);
 	
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
@@ -73,8 +80,6 @@ void ACapsuleCharacter::BeginPlay()
 	if (!FovCurve || !SpringArmCurve)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Courbes d'animation manquantes pour les timelines"));
-		GEngine->AddOnScreenDebugMessage(-1, 5.f, FColor::Red, "AAAAAAAAAAA");
-
 	}
 	
 	if (FovCurve)
@@ -87,13 +92,14 @@ void ACapsuleCharacter::BeginPlay()
 
 	if (SpringArmCurve)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("SpringArmCurve keys count: %d"), SpringArmCurve->FloatCurve.GetNumKeys());
-
-		GEngine->AddOnScreenDebugMessage(8, 5.f, FColor::Green, "SpringArmOk");
 		FOnTimelineFloat SpringArmTimelineCallback;
 		SpringArmTimelineCallback.BindUFunction(this, FName("UpdateSpringArm"));
 		SpringArmTimeline.AddInterpFloat(SpringArmCurve, SpringArmTimelineCallback);
 		SpringArmTimeline.SetLooping(false);
+
+		FOnTimelineEvent EndCallback;
+		EndCallback.BindUFunction(this, FName("EndVelocityAnimation"));
+		SpringArmTimeline.SetTimelineFinishedFunc(EndCallback);
 	}
 }
 
@@ -235,6 +241,11 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 		SpringArmTimeline.Stop();
 	}
 
+	if (VelocityVFX)
+	{
+		VelocityVFX->Activate();
+	}
+
 	GetWorldTimerManager().ClearAllTimersForObject(this);
 
 	TargetSpringArmTarget = Force;
@@ -246,15 +257,14 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 	// Begin anim
 	FovTimeline.PlayFromStart();
 	SpringArmTimeline.PlayFromStart();
+}
 
-	// Inverse
-	FTimerHandle TimerHandle;
-	GetWorldTimerManager().SetTimer(TimerHandle, [&]()
+void ACapsuleCharacter::EndVelocityAnimation()
+{
+	if (VelocityVFX)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Retour à la normale"));
-		//FovTimeline.Reverse();
-		//SpringArmTimeline.Reverse();
-	}, 0.8f, false);
+		VelocityVFX->Deactivate();
+	}
 }
 
 void ACapsuleCharacter::UpdateFov(float Value)

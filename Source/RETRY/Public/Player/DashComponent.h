@@ -10,6 +10,7 @@
 class UCameraComponent;
 class UInputAction;
 class ACapsuleCharacter;
+class USoundCue;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class RETRY_API UDashComponent : public UActorComponent
@@ -52,6 +53,8 @@ private:
 
 	UPROPERTY(EditAnywhere, Category = "Dash", meta = (EditCondition = "DashState == true"))
 	UAnimationAsset* MM_DashAnim;
+	UPROPERTY(EditAnywhere, Category = "Dash", meta = (EditCondition = "DashState == true"))
+	USoundCue* DashSFX;
 
 	// SETTINGS
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dash", meta = (AllowPrivateAccess = "true"))

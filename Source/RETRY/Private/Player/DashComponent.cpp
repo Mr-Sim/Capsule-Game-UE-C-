@@ -4,10 +4,13 @@
 #include "Player/DashComponent.h"
 
 #include "EnhancedInputComponent.h"
+#include "AssetTypeActions/AssetDefinition_SoundBase.h"
 #include "Camera/CameraComponent.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 #include "Player/CapsuleCharacter.h"
+#include "Sound/SoundCue.h"
 
 // Sets default values for this component's properties
 UDashComponent::UDashComponent()
@@ -81,6 +84,8 @@ void UDashComponent::ReleaseDash()
 	GEngine->AddOnScreenDebugMessage(1, 5, FColor::Blue, "ChargedDash");
 
 	FVector Direction = OwnerCamera->GetForwardVector();
+	PlayDashAnimation(fDashForce);
+
 	ExecuteDash(Direction);
 }
 
@@ -109,7 +114,6 @@ void UDashComponent::ExecuteDash(FVector Direction)
 	
 	OwnerCharacter->LaunchCharacter(DashVelocity, true, false);
 	SetDashState();
-	PlayDashAnimation(fDashForce);
 	fDashForce = BaseDashForce;
 	bIsDashing = true;
 	fDashCooldownTimer = DashCooldown;
@@ -121,6 +125,13 @@ void UDashComponent::PlayDashAnimation(float Force)
 	{
 		OwnerCharacter->GetMesh3P()->PlayAnimation(MM_DashAnim, false);
 		OwnerCharacter->VelocityAnimation(Force*0.4);
+	}
+	if (DashSFX)
+	{
+		UGameplayStatics::PlaySoundAtLocation(
+			this,
+			DashSFX,
+			OwnerCharacter->GetActorLocation());
 	}
 }
 
