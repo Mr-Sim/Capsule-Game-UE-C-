@@ -78,7 +78,6 @@ void UJumpComponent::ExecuteJump()
 	// Appliquer la force de saut
 	OwnerCharacter->LaunchCharacter(FVector(0, 0, CurrentJumpForce), true, true);
 
-	PlayJumpAnimation(CurrentJumpForce);
 
 	CurrentJumpForce = BaseJumpForce;
 	bIsJumping = true;

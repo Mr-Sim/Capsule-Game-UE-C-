@@ -15,6 +15,7 @@ class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
 struct FInputActionValue;
+class UNiagaraComponent;
 
 UCLASS(config=Game)
 class ACapsuleCharacter : public ACharacter
@@ -43,7 +44,9 @@ public:
     void SetFirstPerson();
     void SetThirdPerson();
     void VelocityAnimation(float Force);
-    
+    UFUNCTION()
+    void EndVelocityAnimation();
+
     /** Returns Mesh1P subobject **/
     USkeletalMeshComponent* GetMesh3P() const { return Mesh3P; }
     /** Returns FirstPersonCameraComponent subobject **/
@@ -62,6 +65,8 @@ protected:
     UCameraComponent* CameraComponent;
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
     USpringArmComponent* SpringArm;
+    UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+    UNiagaraComponent* VelocityVFX;
 
     UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Components, meta = (AllowPrivateAccess = "true"))
     UJumpComponent* JumpComponent;

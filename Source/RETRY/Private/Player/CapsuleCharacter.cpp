@@ -9,6 +9,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 #include "InputActionValue.h"
+#include "NiagaraComponent.h"
 #include "Components/TimelineComponent.h"
 #include "Engine/LocalPlayer.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -40,6 +41,11 @@ ACapsuleCharacter::ACapsuleCharacter()
 	SpringArm->CameraLagSpeed = 0.f;
 	SpringArm->bAutoActivate = true;
 	CameraComponent->SetupAttachment(SpringArm);
+
+	// Setup niagara system
+	VelocityVFX = CreateDefaultSubobject<UNiagaraComponent>(TEXT("VelocityVFX"));
+	VelocityVFX->SetupAttachment(CameraComponent);
+	VelocityVFX->SetAutoActivate(true);
 	
 	// Create a mesh component that will be used when being viewed from a '1st person' view (when controlling this pawn)
 	Mesh3P = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("CharacterMesh3P"));
@@ -91,6 +97,10 @@ void ACapsuleCharacter::BeginPlay()
 		SpringArmTimelineCallback.BindUFunction(this, FName("UpdateSpringArm"));
 		SpringArmTimeline.AddInterpFloat(SpringArmCurve, SpringArmTimelineCallback);
 		SpringArmTimeline.SetLooping(false);
+
+		FOnTimelineEvent EndCallback;
+		EndCallback.BindUFunction(this, FName("EndVelocityAnimation"));
+		SpringArmTimeline.SetTimelineFinishedFunc(EndCallback);
 	}
 }
 
@@ -215,6 +225,11 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 		SpringArmTimeline.Stop();
 	}
 
+	if (VelocityVFX)
+	{
+		VelocityVFX->Activate();
+	}
+
 	GetWorldTimerManager().ClearAllTimersForObject(this);
 
 	TargetSpringArmTarget = Force;
@@ -235,6 +250,14 @@ void ACapsuleCharacter::VelocityAnimation(float Force)
 		//FovTimeline.Reverse();
 		//SpringArmTimeline.Reverse();
 	}, 0.8f, false);
+}
+
+void ACapsuleCharacter::EndVelocityAnimation()
+{
+	if (VelocityVFX)
+	{
+		VelocityVFX->Deactivate();
+	}
 }
 
 void ACapsuleCharacter::UpdateFov(float Value)
